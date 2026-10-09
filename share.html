@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Share Your Story · Stories of Service</title>
+<meta name="description" content="Scan to record and share your story of service.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .flyer{background:var(--card);border:1px solid var(--line);border-top:10px solid var(--olive);border-radius:6px;padding:28px 22px;display:grid;gap:22px;justify-items:center;text-align:center}
+  .flyer h1{font-size:clamp(2.4rem,10vw,3.8rem)}
+  .flyer .lead{margin:0;font-size:1.2rem;max-width:30ch}
+  .qr{background:#fff;padding:14px;border-radius:6px;border:1px solid var(--line);width:min(72vw,300px);aspect-ratio:1}
+  .qr svg{display:block;width:100%;height:100%}
+  .url{font-family:var(--mono);font-size:.95rem;color:var(--olive);word-break:break-all}
+  .how{list-style:none;margin:0;padding:0;display:grid;gap:10px;text-align:left;max-width:34ch}
+  .how li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline}
+  .how b{font-family:var(--mono);font-size:.8rem;color:var(--on-olive);background:var(--olive);border-radius:3px;padding:1px 7px}
+  .note{margin:0;color:var(--muted);font-size:.92rem;max-width:36ch}
+  .tools{justify-content:center}
+  .tools a{text-decoration:none}
+  @media print{
+    @page{margin:0.5in}
+    :root{--paper:#fff;--card:#fff;--ink:#000;--muted:#333;--line:#999;--olive:#3F4F2E;--on-olive:#fff;color-scheme:light}
+    body{background:#fff}
+    .wrap{padding:0;max-width:none}
+    .tools,footer{display:none!important}
+    .flyer{border:0;border-top:14px solid var(--olive);padding-top:36px;gap:28px}
+    .qr{width:3.6in;border:0;padding:0}
+    .flyer .lead{font-size:16pt}
+    .how{font-size:13pt}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="flyer">
+    <div class="tag">Oral history project</div>
+    <h1>Stories of Service</h1>
+    <p class="lead">Veterans: record your story on your phone and share it.</p>
+    <div class="qr" id="qr" role="img" aria-label="QR code that opens the Stories of Service sign-up form"></div>
+    <div class="url" id="url"></div>
+    <ol class="how">
+      <li><b>1</b><span>Point your phone's camera at the code and tap the link.</span></li>
+      <li><b>2</b><span>Record your story and add a few details. No account or app needed.</span></li>
+      <li><b>3</b><span>Every story is reviewed before it goes up on the wall.</span></li>
+    </ol>
+    <p class="note">Free. Your contact details are never shown, and you can ask for your story to be taken down at any time.</p>
+  </main>
+  <div class="btns tools">
+    <button type="button" class="primary" onclick="window.print()">Print this flyer</button>
+    <a class="filebtn" id="download" download="stories-of-service-qr.svg">Download the QR code</a>
+  </div>
+  <footer><a href="./">Back to the wall</a></footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+  // Always points at this site's /join, so the code matches wherever it's hosted.
+  const target = location.origin + "/join";
+  document.getElementById("url").textContent = target.replace(/^https?:\/\//, "");
+  const qr = qrcode(0, "M");
+  qr.addData(target);
+  qr.make();
+  const svg = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+  document.getElementById("qr").innerHTML = svg;
+  const blob = new Blob([svg], { type: "image/svg+xml" });
+  document.getElementById("download").href = URL.createObjectURL(blob);
+</script>
+</body>
+</html>
