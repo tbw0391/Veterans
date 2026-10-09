@@ -30,6 +30,7 @@
   function takeFile(f) {
     if (!f) return;
     chosen = f; tooLong = false;
+    if (inFlight && inFlight.file !== f) { inFlight = null; $("submitBtn").textContent = "Submit story"; }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(f);
     const v = $("preview"); v.src = previewUrl; v.hidden = false;
@@ -101,12 +102,13 @@
   // Resumable upload in 6 MB pieces, so a dropped signal picks up where it
   // left off instead of starting a multi-GB file over.
   const storageHost = C.supabaseUrl.replace(".supabase.co", ".storage.supabase.co");
-  function uploadFile(path, file, type, onProgress) {
+  // The x-signature header carries the one-time upload token from the server.
+  function uploadFile(path, token, file, type, onProgress) {
     return new Promise((resolve, reject) => {
       const up = new tus.Upload(file, {
         endpoint: storageHost + "/storage/v1/upload/resumable",
         retryDelays: [0, 2000, 5000, 10000, 20000, 30000, 60000],
-        headers: { authorization: "Bearer " + C.supabaseAnonKey, apikey: C.supabaseAnonKey, "x-upsert": "false" },
+        headers: { authorization: "Bearer " + C.supabaseAnonKey, apikey: C.supabaseAnonKey, "x-signature": token, "x-upsert": "false" },
         uploadDataDuringCreation: true,
         removeFingerprintOnSuccess: true,
         chunkSize: 6 * 1024 * 1024,
@@ -115,9 +117,49 @@
         onSuccess: () => resolve(),
         onError: err => reject(err)
       });
-      up.start();
+      // Resume an earlier attempt at this same file, if there was one.
+      up.findPreviousUploads().then(prev => {
+        if (prev.length) up.resumeFromPreviousUpload(prev[0]);
+        up.start();
+      }, () => up.start());
     });
   }
+
+  // CAPTCHA widget (Cloudflare Turnstile)
+  let captchaToken = null, widgetId = null;
+  window.onTurnstileLoad = () => {
+    widgetId = window.turnstile.render("#captcha", {
+      sitekey: C.turnstileSiteKey,
+      callback: t => { captchaToken = t; },
+      "expired-callback": () => { captchaToken = null; },
+      "error-callback": () => { captchaToken = null; }
+    });
+  };
+  function resetCaptcha() {
+    captchaToken = null;
+    if (window.turnstile && widgetId != null) window.turnstile.reset(widgetId);
+  }
+
+  // Call the server-side submit function (checks the CAPTCHA, hands out upload tokens)
+  async function callSubmit(payload) {
+    const r = await fetch(`${C.supabaseUrl}/functions/v1/submit-story`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: C.supabaseAnonKey, Authorization: "Bearer " + C.supabaseAnonKey },
+      body: JSON.stringify(payload)
+    });
+    let out = {};
+    try { out = await r.json(); } catch {}
+    if (!r.ok) {
+      const err = new Error((out.error && out.error.message) || "Something went wrong. Please try again.");
+      err.friendly = true;
+      throw err;
+    }
+    return out;
+  }
+
+  // If a send fails partway, keep its upload slot so tapping Submit again
+  // resumes the same upload instead of starting over (no second CAPTCHA needed).
+  let inFlight = null;
 
   // Keep the screen on during a long upload; a locked phone can stop it.
   async function stayAwake() {
@@ -134,35 +176,45 @@
     const kind = fileKind(chosen);
     if (!kind) return showMsg("That file type isn't supported. Use a video from your phone's camera (MP4 or MOV).", "err");
 
+    const resuming = inFlight && inFlight.file === chosen;
+    if (!resuming && !captchaToken) return showMsg("Tick the human check box just above the Submit button.", "err");
+
     const btn = $("submitBtn"), bar = $("progress");
-    btn.disabled = true; btn.textContent = "Uploading…";
-    bar.hidden = false; bar.value = 0;
-    showMsg("Sending " + mb(chosen.size) + ". Keep this page open and your phone unlocked until it finishes. If the signal drops, it picks up where it left off.");
-    const path = `submissions/${crypto.randomUUID()}.${kind.ext}`;
+    btn.disabled = true; btn.textContent = resuming ? "Resuming…" : "Checking…";
     const lock = await stayAwake();
     try {
-      let photo_path = null;
-      if (photo) {
-        photo_path = `photos/${crypto.randomUUID()}.jpg`;
-        const { error: pe } = await sb.storage.from(C.bucket).upload(photo_path, photo, { contentType: "image/jpeg", upsert: false });
-        if (pe) throw pe;
+      if (!resuming) {
+        const val = id => $(id).value.trim() || null;
+        const started = await callSubmit({
+          action: "start", captchaToken,
+          title, displayName: name,
+          branch: $("branch").value || null,
+          era: $("era").value || null,
+          yearsServed: val("years"),
+          summary: val("summary"),
+          contactEmail: val("email"),
+          rank: val("rank"), job: val("job"), unit: val("unit"),
+          dutyStations: val("stations"), deployments: val("deployments"), awards: val("awards"),
+          hometown: val("hometown"), afterService: val("after"), bio: val("bio"),
+          hasPhoto: !!photo,
+          videoType: kind.type, videoSize: chosen.size, consent: true
+        });
+        inFlight = { file: chosen, photo, photoSent: false, ...started };
       }
-      await uploadFile(path, chosen, kind.type, p => { bar.value = p; });
+      const job = inFlight;
+      if (job.photoPath && job.photo && !job.photoSent) {
+        btn.textContent = "Sending photo…";
+        const { error: pe } = await sb.storage.from(C.bucket).uploadToSignedUrl(job.photoPath, job.photoToken, job.photo, { contentType: "image/jpeg" });
+        if (pe && !/exists/i.test(pe.message || "")) throw pe;
+        job.photoSent = true;
+      }
+      btn.textContent = "Uploading…";
+      bar.hidden = false; bar.value = 0;
+      showMsg("Sending " + mb(chosen.size) + ". Keep this page open and your phone unlocked until it finishes. If the signal drops, it picks up where it left off.");
+      await uploadFile(job.videoPath, job.videoToken, chosen, kind.type, p => { bar.value = p; });
       btn.textContent = "Saving…";
-      const val = id => $(id).value.trim() || null;
-      const { error } = await sb.from("stories").insert({
-        photo_path, rank: val("rank"), job: val("job"), unit: val("unit"),
-        duty_stations: val("stations"), deployments: val("deployments"), awards: val("awards"),
-        hometown: val("hometown"), after_service: val("after"), bio: val("bio"),
-        title, display_name: name,
-        branch: $("branch").value || null,
-        era: $("era").value || null,
-        years_served: $("years").value.trim() || null,
-        summary: $("summary").value.trim() || null,
-        contact_email: $("email").value.trim() || null,
-        video_path: path, video_type: kind.type, consent: true
-      });
-      if (error) throw error;
+      await callSubmit({ action: "finish", storyId: job.storyId, uploadKey: job.uploadKey });
+      inFlight = null;
       $("form").reset(); chosen = null; clearPhoto();
       $("preview").hidden = true; $("preview").removeAttribute("src");
       $("fileInfo").textContent = DEFAULT_INFO; $("fileInfo").classList.remove("bad");
@@ -170,14 +222,16 @@
     } catch (err) {
       console.error(err);
       const s = String(err && err.message || "");
-      showMsg(s.includes("413") || /too large|exceeded the maximum/i.test(s)
+      showMsg(err && err.friendly ? s
+        : s.includes("413") || /too large|exceeded the maximum/i.test(s)
         ? "That file is too big to send. Keep it under " + LIMIT + "."
         : /network|failed to fetch|response code: 0/i.test(s)
           ? "The upload stopped. Check your signal or Wi-Fi and tap Submit again. It picks up where it left off."
           : "Something went wrong saving your story. Please try again.", "err");
     } finally {
       if (lock) lock.release().catch(() => {});
-      btn.disabled = false; btn.textContent = "Submit story"; bar.hidden = true;
+      btn.disabled = false; btn.textContent = inFlight ? "Resume sending" : "Submit story"; bar.hidden = true;
+      resetCaptcha();
     }
   });
 

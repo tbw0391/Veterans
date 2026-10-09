@@ -12,7 +12,8 @@ A phone-friendly site where veterans record their story, add a few details, and 
 
 ## Security rules (enforced in the database)
 
-- Anyone can submit; new stories are always `pending`.
+- Submissions only go through the `submit-story` Edge Function (`supabase/functions/submit-story`). It checks a Cloudflare Turnstile CAPTCHA, limits each IP to 5 submissions an hour, and hands out one-time upload tokens for the video and photo. The public cannot write to the table or the bucket directly.
+- New stories start as `uploading`, then become `pending` once the video arrives.
 - The public can only read `approved` stories and their videos. Contact emails are never public.
 - Only phones or emails listed in the `admins` table can review. Add a reviewer in the Supabase SQL editor (phone is digits only, with the country code):
 
@@ -36,3 +37,11 @@ Authentication → Hooks → **Before User Created**: choose Postgres, function 
 Storage → Settings → **Upload file size limit**: at least 8 GB (the project-wide cap; the bucket limit cannot exceed it).
 
 Database changes live in `supabase/migrations/`.
+
+## CAPTCHA keys (Cloudflare Turnstile)
+
+The site ships with Cloudflare's test keys, which always pass. To turn on real protection:
+
+1. In the Cloudflare dashboard, open **Turnstile** and add a widget for the site's domain.
+2. Put the **site key** in `config.js` (`turnstileSiteKey`).
+3. Set the **secret key** as the Edge Function secret `TURNSTILE_SECRET` in Supabase (Edge Functions → Secrets).

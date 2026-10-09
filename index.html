@@ -87,6 +87,7 @@
 
       <div class="step">
         <div class="step-h"><b>4</b><span>Send it in</span></div>
+        <div id="captcha" class="captcha" aria-label="Human check"></div>
         <div class="btns"><button type="submit" class="primary" id="submitBtn">Submit story</button></div>
         <progress id="progress" max="100" value="0" hidden></progress>
         <div class="msg" id="formMsg" role="status" hidden></div>
@@ -108,5 +109,6 @@
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script src="app.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </body>
 </html>

@@ -4,6 +4,9 @@ window.STORIES_CONFIG = {
   supabaseUrl: "https://ajftnvdgkuvjkflswxrp.supabase.co",
   supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqZnRudmRna3V2amtmbHN3eHJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTc2MzMsImV4cCI6MjEwNzEzMzYzM30.PFpujdcsQRobd3s7GrjzMI5wlLrUssMsePORh_Szl_s",
   bucket: "story-videos",
+  // Cloudflare Turnstile site key (public). This is Cloudflare's test key,
+  // which always passes; swap in your real site key from the Cloudflare dashboard.
+  turnstileSiteKey: "1x00000000000000000000AA",
   // Longest story we take, and the biggest file. 30 minutes of 4K phone
   // video is about 5 GB. Raise both together (and the bucket limit in Supabase).
   maxMinutes: 30,

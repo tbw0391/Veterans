@@ -86,3 +86,4 @@ progress{width:100%;height:10px;accent-color:var(--olive)}
 .empty strong{display:block;font-family:var(--display);font-weight:400;font-size:1.3rem;color:var(--olive);margin-bottom:4px}
 footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.captcha{min-height:65px}
