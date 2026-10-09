@@ -30,7 +30,7 @@
           <label class="filebtn" for="pickInput">Choose from phone</label>
           <input type="file" id="pickInput" accept="video/*,audio/mp4,audio/x-m4a,.m4a,.mov">
         </div>
-        <div class="fileinfo" id="fileInfo">Up to 50 MB, about 4 minutes of phone video. Have a longer story? Record it in parts.</div>
+        <div class="fileinfo" id="fileInfo">Up to 30 minutes. Long videos are big files, so Wi-Fi is best for sending.</div>
         <video id="preview" controls playsinline hidden></video>
       </div>
 
@@ -79,6 +79,7 @@
   <footer><span>Stories are shared with the storyteller's permission.</span><a href="admin.html">Reviewer sign-in</a></footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script src="app.js"></script>

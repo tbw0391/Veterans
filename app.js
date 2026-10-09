@@ -16,8 +16,9 @@
   $("nextPrompt").onclick = () => { pi = (pi + 1) % PROMPTS.length; $("promptText").textContent = PROMPTS[pi]; };
 
   const DEFAULT_INFO = $("fileInfo").textContent;
-  const mb = b => (b / 1048576).toFixed(1) + " MB";
-  let chosen = null, previewUrl = null;
+  const mb = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : (b / 1048576).toFixed(1) + " MB";
+  const LIMIT = C.maxMinutes + " minutes";
+  let chosen = null, previewUrl = null, tooLong = false;
 
   function showMsg(text, kind) {
     const m = $("formMsg");
@@ -28,16 +29,27 @@
 
   function takeFile(f) {
     if (!f) return;
-    chosen = f;
+    chosen = f; tooLong = false;
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(f);
     const v = $("preview"); v.src = previewUrl; v.hidden = false;
     const big = f.size > C.maxBytes;
     const info = $("fileInfo");
-    info.textContent = (f.name || "Recording") + " · " + mb(f.size) +
-      (big ? " · Too long. Keep it under 50 MB, or record your story in two parts." : " · Ready");
+    const label = (f.name || "Recording") + " · " + mb(f.size);
+    info.textContent = label +
+      (big ? " · Too big. Keep it under " + LIMIT + ", or record your story in two parts." : " · Ready");
     info.classList.toggle("bad", big);
     showMsg("");
+    // Check the length once the phone has read the video.
+    v.onloadedmetadata = () => {
+      if (chosen !== f || !isFinite(v.duration)) return;
+      const mins = Math.round(v.duration / 60);
+      tooLong = v.duration > C.maxMinutes * 60 + 30;
+      if (big) return;
+      info.textContent = label + " · " + (mins ? mins + " min" : Math.round(v.duration) + " sec") +
+        (tooLong ? " · Too long. Keep it under " + LIMIT + ", or record your story in two parts." : " · Ready");
+      info.classList.toggle("bad", tooLong);
+    };
   }
   $("camInput").onchange = e => takeFile(e.target.files[0]);
   $("pickInput").onchange = e => takeFile(e.target.files[0]);
@@ -54,26 +66,36 @@
     return null;
   }
 
-  // Upload with a progress bar (plain XHR so we can report progress)
+  // Resumable upload in 6 MB pieces, so a dropped signal picks up where it
+  // left off instead of starting a multi-GB file over.
+  const storageHost = C.supabaseUrl.replace(".supabase.co", ".storage.supabase.co");
   function uploadFile(path, file, type, onProgress) {
     return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${C.supabaseUrl}/storage/v1/object/${C.bucket}/${path}`);
-      xhr.setRequestHeader("apikey", C.supabaseAnonKey);
-      xhr.setRequestHeader("Authorization", "Bearer " + C.supabaseAnonKey);
-      xhr.setRequestHeader("Content-Type", type);
-      xhr.setRequestHeader("x-upsert", "false");
-      xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
-      xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(xhr.status + " " + xhr.responseText));
-      xhr.onerror = () => reject(new Error("network"));
-      xhr.send(file);
+      const up = new tus.Upload(file, {
+        endpoint: storageHost + "/storage/v1/upload/resumable",
+        retryDelays: [0, 2000, 5000, 10000, 20000, 30000, 60000],
+        headers: { authorization: "Bearer " + C.supabaseAnonKey, apikey: C.supabaseAnonKey, "x-upsert": "false" },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        chunkSize: 6 * 1024 * 1024,
+        metadata: { bucketName: C.bucket, objectName: path, contentType: type, cacheControl: "3600" },
+        onProgress: (sent, total) => onProgress(Math.round(sent / total * 100)),
+        onSuccess: () => resolve(),
+        onError: err => reject(err)
+      });
+      up.start();
     });
+  }
+
+  // Keep the screen on during a long upload; a locked phone can stop it.
+  async function stayAwake() {
+    try { return await navigator.wakeLock.request("screen"); } catch { return null; }
   }
 
   $("form").addEventListener("submit", async e => {
     e.preventDefault();
     if (!chosen) return showMsg("Record or choose a video first (step 1).", "err");
-    if (chosen.size > C.maxBytes) return showMsg("That clip is " + mb(chosen.size) + ". The limit is 50 MB. Trim it, or record your story in two parts.", "err");
+    if (chosen.size > C.maxBytes || tooLong) return showMsg("That video is longer than " + LIMIT + ". Trim it, or record your story in two parts.", "err");
     const title = $("title").value.trim(), name = $("name").value.trim();
     if (!title || !name) return showMsg("Add a story title and the name to show.", "err");
     if (!$("consent").checked) return showMsg("Check the consent box so we can share your story.", "err");
@@ -83,8 +105,9 @@
     const btn = $("submitBtn"), bar = $("progress");
     btn.disabled = true; btn.textContent = "Uploading…";
     bar.hidden = false; bar.value = 0;
-    showMsg("Uploading " + mb(chosen.size) + ". Keep this page open until it finishes.");
+    showMsg("Sending " + mb(chosen.size) + ". Keep this page open and your phone unlocked until it finishes. If the signal drops, it picks up where it left off.");
     const path = `submissions/${crypto.randomUUID()}.${kind.ext}`;
+    const lock = await stayAwake();
     try {
       await uploadFile(path, chosen, kind.type, p => { bar.value = p; });
       btn.textContent = "Saving…";
@@ -105,12 +128,13 @@
     } catch (err) {
       console.error(err);
       const s = String(err && err.message || "");
-      showMsg(s.includes("413") || s.includes("too large")
-        ? "That file is over the 50 MB limit."
-        : s === "network"
-          ? "The upload didn't go through. Check your signal or Wi-Fi and try again."
+      showMsg(s.includes("413") || /too large|exceeded the maximum/i.test(s)
+        ? "That file is too big to send. Keep it under " + LIMIT + "."
+        : /network|failed to fetch|response code: 0/i.test(s)
+          ? "The upload stopped. Check your signal or Wi-Fi and tap Submit again. It picks up where it left off."
           : "Something went wrong saving your story. Please try again.", "err");
     } finally {
+      if (lock) lock.release().catch(() => {});
       btn.disabled = false; btn.textContent = "Submit story"; bar.hidden = true;
     }
   });

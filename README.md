@@ -6,7 +6,7 @@ A phone-friendly site where veterans record their story, add a few details, and 
 
 - **index.html**: record or pick a video, fill in name, branch, era and years, give consent, submit. Shows approved stories.
 - **admin.html**: reviewers sign in with a code texted to their phone (or an emailed link), then approve, hide or delete stories.
-- **Supabase** (project "Vetrans") stores the `stories` table and the private `story-videos` bucket (50 MB per file).
+- **Supabase** (project "Vetrans") stores the `stories` table and the private `story-videos` bucket (8 GB per file, about 30 minutes of video). Uploads are resumable, so a dropped signal picks up where it left off.
 - Plain static files, no build step. Hosted on Vercel.
 
 ## Security rules (enforced in the database)
@@ -31,5 +31,7 @@ Authentication → URL Configuration:
 Authentication → Sign In / Providers → **Phone**: turn on, choose Twilio, and enter the Account SID, Auth Token and Messaging Service SID.
 
 Authentication → Hooks → **Before User Created**: choose Postgres, function `private.only_reviewers_sign_up`.
+
+Storage → Settings → **Upload file size limit**: at least 8 GB (the project-wide cap; the bucket limit cannot exceed it).
 
 Database changes live in `supabase/migrations/`.
