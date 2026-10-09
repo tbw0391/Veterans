@@ -74,7 +74,7 @@
 
   async function load() {
     const { data, error } = await sb.from("stories")
-      .select("id,title,display_name,branch,era,years_served,summary,video_path,status,created_at,approved_at")
+      .select("id,title,display_name,branch,era,years_served,summary,video_path,photo_path,status,created_at,approved_at")
       .order("created_at", { ascending: false }).limit(500);
     if (error) { $("list").replaceChildren(emptyState("Couldn't load stories", error.message)); return; }
     stories = data;
@@ -92,7 +92,7 @@
   }
 
   async function remove(s) {
-    await sb.storage.from(C.bucket).remove([s.video_path]);
+    await sb.storage.from(C.bucket).remove([s.video_path, s.photo_path].filter(Boolean));
     const { error } = await sb.from("stories").delete().eq("id", s.id);
     if (error) return alert("Couldn't delete: " + error.message);
     stories = stories.filter(x => x !== s); render();
