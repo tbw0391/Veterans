@@ -51,6 +51,38 @@
       info.classList.toggle("bad", tooLong);
     };
   }
+  // Bio photo: shrink to 1600px JPEG on the phone. Redrawing it also drops
+  // the hidden location data phones put in photos.
+  let photo = null, photoUrl = null;
+  const PHOTO_INFO = $("photoInfo").textContent;
+  async function shrinkPhoto(f) {
+    const img = await createImageBitmap(f, { imageOrientation: "from-image" });
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return new Promise((ok, bad) => c.toBlob(b => b ? ok(b) : bad(new Error("photo")), "image/jpeg", 0.85));
+  }
+  function clearPhoto() {
+    photo = null; $("photoInput").value = "";
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    $("photoPreview").hidden = true; $("photoClear").hidden = true;
+    $("photoBtn").textContent = "Add a photo";
+    $("photoInfo").textContent = PHOTO_INFO; $("photoInfo").classList.remove("bad");
+  }
+  $("photoInput").onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try { photo = await shrinkPhoto(f); }
+    catch { clearPhoto(); $("photoInfo").textContent = "That photo couldn't be opened. Try a JPEG or PNG."; $("photoInfo").classList.add("bad"); return; }
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    photoUrl = URL.createObjectURL(photo);
+    $("photoPreview").src = photoUrl; $("photoPreview").hidden = false;
+    $("photoClear").hidden = false; $("photoBtn").textContent = "Change photo";
+    $("photoInfo").textContent = "Photo ready";
+  };
+  $("photoClear").onclick = clearPhoto;
+
   $("camInput").onchange = e => takeFile(e.target.files[0]);
   $("pickInput").onchange = e => takeFile(e.target.files[0]);
 
@@ -109,9 +141,19 @@
     const path = `submissions/${crypto.randomUUID()}.${kind.ext}`;
     const lock = await stayAwake();
     try {
+      let photo_path = null;
+      if (photo) {
+        photo_path = `photos/${crypto.randomUUID()}.jpg`;
+        const { error: pe } = await sb.storage.from(C.bucket).upload(photo_path, photo, { contentType: "image/jpeg", upsert: false });
+        if (pe) throw pe;
+      }
       await uploadFile(path, chosen, kind.type, p => { bar.value = p; });
       btn.textContent = "Saving…";
+      const val = id => $(id).value.trim() || null;
       const { error } = await sb.from("stories").insert({
+        photo_path, rank: val("rank"), job: val("job"), unit: val("unit"),
+        duty_stations: val("stations"), deployments: val("deployments"), awards: val("awards"),
+        hometown: val("hometown"), after_service: val("after"), bio: val("bio"),
         title, display_name: name,
         branch: $("branch").value || null,
         era: $("era").value || null,
@@ -121,7 +163,7 @@
         video_path: path, video_type: kind.type, consent: true
       });
       if (error) throw error;
-      $("form").reset(); chosen = null;
+      $("form").reset(); chosen = null; clearPhoto();
       $("preview").hidden = true; $("preview").removeAttribute("src");
       $("fileInfo").textContent = DEFAULT_INFO; $("fileInfo").classList.remove("bad");
       showMsg("Story received. It goes up on the wall once it's reviewed. Thank you for your service.", "ok");

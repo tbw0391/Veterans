@@ -57,11 +57,36 @@
           <label class="full" for="summary">One-line summary <small>(optional)</small><textarea id="summary" maxlength="400" placeholder="What the story is about, in a sentence."></textarea></label>
           <label class="full" for="email">Email <small>(optional, never shown, only used if you want your story changed or taken down)</small><input type="email" id="email" maxlength="200" autocomplete="email"></label>
         </div>
-        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree this recording may be shown on this site after review. I can ask for it to be taken down at any time.</span></label>
+        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree this recording and my bio may be shown on this site after review. I can ask for it to be taken down at any time.</span></label>
       </div>
 
       <div class="step">
-        <div class="step-h"><b>3</b><span>Send it in</span></div>
+        <div class="step-h"><b>3</b><span>Your bio <small>(all optional)</small></span></div>
+        <p class="hint">This goes on your own page next to your story. Fill in as much or as little as you like.</p>
+        <div class="photo-pick">
+          <img id="photoPreview" alt="" hidden>
+          <div class="btns">
+            <label class="filebtn" for="photoInput" id="photoBtn">Add a photo</label>
+            <input type="file" id="photoInput" accept="image/*">
+            <button type="button" class="small" id="photoClear" hidden>Remove photo</button>
+          </div>
+          <div class="fileinfo" id="photoInfo">A portrait, or a photo from your service.</div>
+        </div>
+        <div class="fields">
+          <label for="rank">Rank<input type="text" id="rank" maxlength="60" placeholder="Staff Sergeant (E-6)"></label>
+          <label for="job">Job / MOS / rating<input type="text" id="job" maxlength="120" placeholder="0311 Rifleman"></label>
+          <label class="full" for="unit">Units<input type="text" id="unit" maxlength="200" placeholder="2nd Bn, 5th Marines"></label>
+          <label class="full" for="stations">Duty stations<textarea id="stations" maxlength="500" placeholder="Camp Pendleton, Okinawa"></textarea></label>
+          <label class="full" for="deployments">Deployments<textarea id="deployments" maxlength="500" placeholder="Iraq 2004, Afghanistan 2010"></textarea></label>
+          <label class="full" for="awards">Awards and decorations<textarea id="awards" maxlength="500" placeholder="Bronze Star, Purple Heart"></textarea></label>
+          <label class="full" for="hometown">Hometown<input type="text" id="hometown" maxlength="120" placeholder="Columbus, Ohio"></label>
+          <label class="full" for="after">Life after service<textarea id="after" maxlength="1000" placeholder="Work, family, what you're up to now."></textarea></label>
+          <label class="full" for="bio">About me<textarea id="bio" class="tall" maxlength="4000" placeholder="Anything else you want people to know, in your own words."></textarea></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>4</b><span>Send it in</span></div>
         <div class="btns"><button type="submit" class="primary" id="submitBtn">Submit story</button></div>
         <progress id="progress" max="100" value="0" hidden></progress>
         <div class="msg" id="formMsg" role="status" hidden></div>
