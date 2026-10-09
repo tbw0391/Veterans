@@ -5,6 +5,7 @@ A phone-friendly site where veterans record their story, add a few details, and 
 ## How it works
 
 - **index.html**: record or pick a video, fill in name, branch, era and years, give consent, submit. Shows approved stories.
+- **bio.html**: each story's own page with the veteran's photo, service details, life after service and an "about me". Filled in as step 3 of the submit form.
 - **admin.html**: reviewers sign in with a code texted to their phone (or an emailed link), then approve, hide or delete stories.
 - **Supabase** (project "Vetrans") stores the `stories` table and the private `story-videos` bucket (8 GB per file, about 30 minutes of video). Uploads are resumable, so a dropped signal picks up where it left off.
 - Plain static files, no build step. Hosted on Vercel.
