@@ -1,5 +1,7 @@
 -- One profile per veteran (the old stories table), holding an intro video
 -- and any number of separate story videos. Review happens per profile.
+-- This file rule reads the old video_path column, so it goes first; it's rebuilt at the end.
+drop policy "Approved videos and photos are viewable; admins see all" on storage.objects;
 alter table public.stories rename to veterans;
 alter table public.veterans
   drop column title,
@@ -71,7 +73,6 @@ create policy "Admins delete videos" on public.videos
   using ((select private.is_admin()));
 
 -- Files: videos, photos and captions are public only once the profile is approved.
-drop policy "Approved videos and photos are viewable; admins see all" on storage.objects;
 create policy "Approved profile files are viewable; admins see all" on storage.objects
   for select to anon, authenticated
   using (bucket_id = 'story-videos' and (
