@@ -86,3 +86,45 @@ progress{width:100%;height:10px;accent-color:var(--olive)}
 .empty strong{display:block;font-family:var(--display);font-weight:400;font-size:1.3rem;color:var(--olive);margin-bottom:4px}
 footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Branch color: set per card/profile as --branch; olive when unknown */
+body{border-top:8px solid var(--branch,var(--olive))}
+.story{border-top:6px solid var(--branch,var(--line))}
+.bio-head h1{color:var(--branch,var(--olive))}
+@media (prefers-color-scheme:dark){.bio-head h1{color:var(--ink)}}
+
+/* Tap-to-pick choices (branch, component, eras) */
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+legend{font-weight:600;font-size:.95rem;padding:0;margin-bottom:8px}
+legend small{font-weight:400;color:var(--muted)}
+.choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.choices.segmented{grid-template-columns:repeat(3,1fr)}
+.choice{position:relative;display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-left:10px solid var(--c,var(--olive));border-radius:4px;background:var(--paper);font-weight:600;font-size:.95rem;cursor:pointer}
+.choices.segmented .choice{border-left-width:1px;justify-content:center;text-align:center;font-size:.88rem;padding:8px}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice:has(input:checked){background:var(--c,var(--olive));color:var(--on-c,var(--on-olive));border-color:var(--c,var(--olive))}
+.choices.eras .choice:has(input:checked){background:var(--card);color:var(--ink);border-color:var(--c);box-shadow:inset 0 0 0 2px var(--c)}
+.choices.eras .choice:has(input:checked) span::after{content:" ✓"}
+.choice:has(input:focus-visible){outline:3px solid var(--brass);outline-offset:2px}
+
+/* Story blocks on the form */
+.story-list{display:grid;gap:14px}
+.story-block{border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:10px;background:var(--paper)}
+.story-block-h{display:flex;justify-content:space-between;align-items:center}
+.filebtn{position:relative}
+
+/* Era ribbons */
+.ribbons{display:flex;flex-wrap:wrap;gap:3px}
+.ribbon{display:inline-block;width:30px;height:10px;border-radius:2px;background:var(--c)}
+.ribbons.labeled{gap:6px}
+.ribbons.labeled .ribbon{width:auto;height:auto;padding:3px 10px 3px 8px;border-left:14px solid var(--c);background:var(--card);border-radius:3px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* Cards and profile */
+.who{display:flex;gap:12px;align-items:center}
+.who img{width:56px;height:56px;object-fit:cover;border-radius:4px;flex:none}
+.video-block{display:grid;gap:8px}
+.video-block h3{margin:0;font-size:1.15rem}
+.transcript summary{cursor:pointer;font-weight:600;color:var(--olive)}
+.transcript p{margin:.6em 0 0;white-space:pre-line;font-size:.95rem}
+.video-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.video-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.92rem}

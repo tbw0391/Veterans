@@ -1,5 +1,5 @@
 (function () {
-  const { sb, C, el, signedUrls, storyCard, emptyState } = window.Stories;
+  const { sb, C, el, signedUrls, veteranCard, emptyState, VETERAN_COLS, sortVideos } = window.Stories;
   const $ = id => document.getElementById(id);
   let stories = [], contacts = {}, urls = {}, view = "pending";
 
@@ -73,29 +73,50 @@
   });
 
   async function load() {
-    const { data, error } = await sb.from("stories")
-      .select("id,title,display_name,branch,era,years_served,summary,video_path,photo_path,status,created_at,approved_at")
+    const { data, error } = await sb.from("veterans").select(VETERAN_COLS)
       .order("created_at", { ascending: false }).limit(500);
-    if (error) { $("list").replaceChildren(emptyState("Couldn't load stories", error.message)); return; }
-    stories = data;
+    if (error) { $("list").replaceChildren(emptyState("Couldn't load profiles", error.message)); return; }
+    stories = data.map(sortVideos);
     const { data: c } = await sb.rpc("admin_story_contacts");
     contacts = {}; (c || []).forEach(r => { if (r.contact_email) contacts[r.id] = r.contact_email; });
-    urls = await signedUrls(stories.map(s => s.video_path));
+    urls = await signedUrls(stories.flatMap(v => [v.photo_path, ...v.videos.map(d => d.video_path)]));
     render();
   }
 
   async function setStatus(s, status) {
     const patch = { status, approved_at: status === "approved" ? new Date().toISOString() : null };
-    const { error } = await sb.from("stories").update(patch).eq("id", s.id);
+    const { error } = await sb.from("veterans").update(patch).eq("id", s.id);
     if (error) return alert("Couldn't update: " + error.message);
     Object.assign(s, patch); render();
   }
 
+  // Delete a whole profile: every video, caption file and the photo.
   async function remove(s) {
-    await sb.storage.from(C.bucket).remove([s.video_path, s.photo_path].filter(Boolean));
-    const { error } = await sb.from("stories").delete().eq("id", s.id);
+    await sb.storage.from(C.bucket).remove([s.photo_path, ...s.videos.flatMap(d => [d.video_path, d.captions_path])].filter(Boolean));
+    const { error } = await sb.from("veterans").delete().eq("id", s.id);
     if (error) return alert("Couldn't delete: " + error.message);
     stories = stories.filter(x => x !== s); render();
+  }
+
+  // Delete one video from a profile.
+  async function removeVideo(s, d) {
+    await sb.storage.from(C.bucket).remove([d.video_path, d.captions_path].filter(Boolean));
+    const { error } = await sb.from("videos").delete().eq("id", d.id);
+    if (error) return alert("Couldn't delete: " + error.message);
+    s.videos = s.videos.filter(x => x !== d); render();
+  }
+
+  // Tap once to arm, again within 4 seconds to confirm.
+  function armed(b, label, fn) {
+    b.onclick = () => {
+      if (b.dataset.armed !== "1") {
+        b.dataset.armed = "1"; b.textContent = "Tap again to delete";
+        setTimeout(() => { b.dataset.armed = ""; b.textContent = label; }, 4000);
+        return;
+      }
+      b.disabled = true; fn();
+    };
+    return b;
   }
 
   function btn(label, cls, fn) { const b = el("button", "small " + (cls || ""), label); b.type = "button"; b.onclick = fn; return b; }
@@ -115,24 +136,27 @@
       return;
     }
     rows.forEach(s => {
-      const { card, meta } = storyCard(s, urls[s.video_path]);
+      const { card, meta } = veteranCard(s, urls);
       const info = el("div", "dogtag");
       info.append(el("span", null, "Sent " + new Date(s.created_at).toLocaleString()));
       if (contacts[s.id]) info.append(el("span", null, contacts[s.id]));
       meta.append(info);
+      if (s.videos.length) {
+        const ul = el("ul", "video-list");
+        s.videos.forEach(d => {
+          const li = el("li");
+          const a = el("a", null, d.kind === "intro" ? "Intro" : d.title);
+          if (urls[d.video_path]) { a.href = urls[d.video_path]; a.target = "_blank"; a.rel = "noopener"; }
+          li.append(a, armed(btn("Remove", "danger", null), "Remove", () => removeVideo(s, d)));
+          ul.append(li);
+        });
+        meta.append(ul);
+      } else meta.append(el("p", null, "No videos yet. They may still be uploading."));
       const r = el("div", "review");
       if (s.status !== "approved") r.append(btn("Approve and post", "primary", () => setStatus(s, "approved")));
       if (s.status !== "hidden") r.append(btn(s.status === "approved" ? "Take down" : "Hide", "", () => setStatus(s, "hidden")));
       if (s.status === "hidden") r.append(btn("Move to waiting", "", () => setStatus(s, "pending")));
-      const del = btn("Delete for good", "danger", () => {
-        if (del.dataset.armed !== "1") {
-          del.dataset.armed = "1"; del.textContent = "Tap again to delete";
-          setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete for good"; }, 4000);
-          return;
-        }
-        del.disabled = true; remove(s);
-      });
-      r.append(del);
+      r.append(armed(btn("Delete for good", "danger", null), "Delete for good", () => remove(s)));
       meta.append(r);
       list.append(card);
     });

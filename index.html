@@ -15,59 +15,54 @@
   <header>
     <div class="tag">Oral history project</div>
     <h1>Stories of Service</h1>
-    <p>Record your story on your phone, add a few details, and send it in. Every story is reviewed before it goes up on the wall.</p>
+    <p>Introduce yourself on video, record your stories one at a time, and add a short bio. Everything is reviewed before it goes up on the wall.</p>
   </header>
 
   <section aria-labelledby="rec-h">
     <h2 id="rec-h">Tell your story</h2>
     <form class="panel" id="form" novalidate>
-      <div class="step">
-        <div class="step-h"><b>1</b><span>Record or choose a video</span></div>
-        <div class="prompt" aria-live="polite"><span id="promptText">Where were you when you decided to join, and why?</span><button type="button" class="small" id="nextPrompt">Another question</button></div>
-        <div class="btns">
-          <label class="filebtn primary" for="camInput">Open camera</label>
-          <input type="file" id="camInput" accept="video/*" capture="user">
-          <label class="filebtn" for="pickInput">Choose from phone</label>
-          <input type="file" id="pickInput" accept="video/*,audio/mp4,audio/x-m4a,.m4a,.mov">
-        </div>
-        <div class="fileinfo" id="fileInfo">Up to 30 minutes. Long videos are big files, so Wi-Fi is best for sending.</div>
-        <video id="preview" controls playsinline hidden></video>
-      </div>
 
       <div class="step">
-        <div class="step-h"><b>2</b><span>Add your details</span></div>
+        <div class="step-h"><b>1</b><span>About you</span></div>
+        <fieldset>
+          <legend>Which branch did you serve in?</legend>
+          <div class="choices branches" id="branchChoices"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Active duty, Guard or Reserve?</legend>
+          <div class="choices segmented" id="componentChoices"></div>
+        </fieldset>
+        <fieldset>
+          <legend>When did you serve? <small>(pick all that apply)</small></legend>
+          <div class="choices eras" id="eraChoices"></div>
+        </fieldset>
         <div class="fields">
-          <label class="full" for="title">Story title<input type="text" id="title" maxlength="120" placeholder="The night the generator quit at the FOB"></label>
-          <label for="name">Name to show<input type="text" id="name" maxlength="80" placeholder="SSgt Dana R."></label>
-          <label for="branch">Branch
-            <select id="branch">
-              <option value="">Choose one</option>
-              <option>Army</option><option>Marine Corps</option><option>Navy</option><option>Air Force</option>
-              <option>Space Force</option><option>Coast Guard</option><option>Army National Guard</option><option>Air National Guard</option><option>Reserve</option>
-            </select>
-          </label>
-          <label for="era">Era or conflict
-            <select id="era">
-              <option value="">Choose one</option>
-              <option>WWII</option><option>Korea</option><option>Vietnam</option><option>Cold War</option>
-              <option>Gulf War</option><option>OEF / Afghanistan</option><option>OIF / Iraq</option><option>Peacetime / Other</option>
-            </select>
-          </label>
+          <label for="name">Name to show<input type="text" id="name" maxlength="80" placeholder="SSgt Dana R." autocomplete="name"></label>
           <label for="years">Years served<input type="text" id="years" maxlength="30" placeholder="2004–2012"></label>
-          <label class="full" for="summary">One-line summary <small>(optional)</small><textarea id="summary" maxlength="400" placeholder="What the story is about, in a sentence."></textarea></label>
-          <label class="full" for="email">Email <small>(optional, never shown, only used if you want your story changed or taken down)</small><input type="email" id="email" maxlength="200" autocomplete="email"></label>
+          <label class="full" for="email">Email <small>(optional, never shown, only used if you want something changed or taken down)</small><input type="email" id="email" maxlength="200" autocomplete="email"></label>
         </div>
-        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree this recording and my bio may be shown on this site after review. I can ask for it to be taken down at any time.</span></label>
       </div>
 
       <div class="step">
-        <div class="step-h"><b>3</b><span>Your bio <small>(all optional)</small></span></div>
-        <p class="hint">This goes on your own page next to your story. Fill in as much or as little as you like.</p>
+        <div class="step-h"><b>2</b><span>Introduce yourself</span></div>
+        <p class="hint">A short video, a minute or two: your name, your branch, when you served and what you did.</p>
+        <div id="introPicker"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>3</b><span>Your stories</span></div>
+        <p class="hint">Record each story as its own video, up to <span class="maxmin"></span> each. One for joining up, one for a deployment, one for coming home, whatever you want to share.</p>
+        <div id="storyList" class="story-list"></div>
+        <div class="btns"><button type="button" id="addStory">Add another story</button></div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>4</b><span>Your bio <small>(all optional)</small></span></div>
+        <p class="hint">This goes on your profile page next to your videos. Rather talk than type? Tap the microphone on your phone's keyboard and speak.</p>
         <div class="photo-pick">
           <img id="photoPreview" alt="" hidden>
           <div class="btns">
-            <label class="filebtn" for="photoInput" id="photoBtn">Add a photo</label>
-            <input type="file" id="photoInput" accept="image/*">
+            <label class="filebtn" id="photoBtn">Add a photo<input type="file" id="photoInput" accept="image/*"></label>
             <button type="button" class="small" id="photoClear" hidden>Remove photo</button>
           </div>
           <div class="fileinfo" id="photoInfo">A portrait, or a photo from your service.</div>
@@ -86,8 +81,10 @@
       </div>
 
       <div class="step">
-        <div class="step-h"><b>4</b><span>Send it in</span></div>
-        <div class="btns"><button type="submit" class="primary" id="submitBtn">Submit story</button></div>
+        <div class="step-h"><b>5</b><span>Send it in</span></div>
+        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree my videos and bio may be shown on this site after review. I can ask for them to be taken down at any time.</span></label>
+        <div class="btns"><button type="submit" class="primary" id="submitBtn">Send my profile</button></div>
+        <div class="fileinfo" id="progressLabel" hidden></div>
         <progress id="progress" max="100" value="0" hidden></progress>
         <div class="msg" id="formMsg" role="status" hidden></div>
       </div>
