@@ -4,6 +4,50 @@
   let stories = [], contacts = {}, urls = {}, view = "pending";
 
   function show(id) { ["signin", "denied", "queue"].forEach(s => $(s).hidden = s !== id); }
+  function form(id) { ["phoneForm", "codeForm", "loginForm"].forEach(f => $(f).hidden = f !== id); }
+  function say(id, ok, text) { const m = $(id); m.hidden = false; m.className = "msg " + (ok ? "ok" : "err"); m.textContent = text; }
+
+  // US numbers by default; a leading + keeps any country code.
+  function toE164(raw) {
+    const d = raw.replace(/\D/g, "");
+    if (raw.trim().startsWith("+")) return d.length >= 11 ? "+" + d : null;
+    if (d.length === 10) return "+1" + d;
+    if (d.length === 11 && d[0] === "1") return "+" + d;
+    return null;
+  }
+  let pendingPhone = null;
+
+  $("useEmail").onclick = () => form("loginForm");
+  $("usePhone").onclick = () => form("phoneForm");
+  $("codeBack").onclick = () => { $("loginCode").value = ""; form("phoneForm"); };
+
+  $("phoneForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const phone = toE164($("loginPhone").value);
+    if (!phone) return say("phoneMsg", false, "Enter a 10-digit phone number.");
+    $("phoneBtn").disabled = true;
+    const { error } = await sb.auth.signInWithOtp({ phone });
+    $("phoneBtn").disabled = false;
+    if (error) return say("phoneMsg", false, "Couldn't send a code: " + error.message);
+    pendingPhone = phone;
+    $("phoneMsg").hidden = true;
+    say("codeMsg", true, "We texted a code to " + $("loginPhone").value.trim() + ".");
+    form("codeForm");
+    $("loginCode").focus();
+  });
+
+  $("codeForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const token = $("loginCode").value.replace(/\D/g, "");
+    if (token.length !== 6) return say("codeMsg", false, "Enter the 6-digit code.");
+    $("codeBtn").disabled = true;
+    const { error } = await sb.auth.verifyOtp({ phone: pendingPhone, token, type: "sms" });
+    $("codeBtn").disabled = false;
+    if (error) { $("loginCode").value = ""; return say("codeMsg", false, "That code didn't work: " + error.message); }
+  });
+  $("loginCode").addEventListener("input", e => {
+    if (e.target.value.replace(/\D/g, "").length === 6) $("codeForm").requestSubmit();
+  });
 
   $("loginForm").addEventListener("submit", async e => {
     e.preventDefault();
@@ -96,10 +140,11 @@
 
   async function start(session) {
     if (!session) { show("signin"); $("signoutBtn").hidden = true; $("who").textContent = ""; return; }
-    $("who").textContent = session.user.email;
+    const who = session.user.email || (session.user.phone ? "+" + session.user.phone.replace(/^\+/, "") : "");
+    $("who").textContent = who;
     $("signoutBtn").hidden = false;
     const { data: ok } = await sb.rpc("am_i_reviewer");
-    if (!ok) { $("whoDenied").textContent = session.user.email; show("denied"); return; }
+    if (!ok) { $("whoDenied").textContent = who; show("denied"); return; }
     show("queue");
     load();
   }
