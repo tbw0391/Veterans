@@ -34,6 +34,11 @@
     [s.display_name, s.branch, s.era, s.years_served].filter(Boolean).forEach(t => tag.append(el("span", null, t)));
     meta.append(tag);
     if (s.summary) meta.append(el("p", null, s.summary));
+    if (s.id) {
+      const a = el("a", "more", "Read " + (s.display_name ? s.display_name + "'s" : "the") + " bio");
+      a.href = "bio.html?id=" + encodeURIComponent(s.id);
+      meta.append(a);
+    }
     card.append(meta);
     return { card, meta };
   }
