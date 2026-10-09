@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stories of Service</title>
+<meta name="description" content="Veterans record and share their stories of service from a phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">Oral history project</div>
+    <h1>Stories of Service</h1>
+    <p>Record your story on your phone, add a few details, and send it in. Every story is reviewed before it goes up on the wall.</p>
+  </header>
+
+  <section aria-labelledby="rec-h">
+    <h2 id="rec-h">Tell your story</h2>
+    <form class="panel" id="form" novalidate>
+      <div class="step">
+        <div class="step-h"><b>1</b><span>Record or choose a video</span></div>
+        <div class="prompt" aria-live="polite"><span id="promptText">Where were you when you decided to join, and why?</span><button type="button" class="small" id="nextPrompt">Another question</button></div>
+        <div class="btns">
+          <label class="filebtn primary" for="camInput">Open camera</label>
+          <input type="file" id="camInput" accept="video/*" capture="user">
+          <label class="filebtn" for="pickInput">Choose from phone</label>
+          <input type="file" id="pickInput" accept="video/*,audio/mp4,audio/x-m4a,.m4a,.mov">
+        </div>
+        <div class="fileinfo" id="fileInfo">Up to 50 MB, about 4 minutes of phone video. Have a longer story? Record it in parts.</div>
+        <video id="preview" controls playsinline hidden></video>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>2</b><span>Add your details</span></div>
+        <div class="fields">
+          <label class="full" for="title">Story title<input type="text" id="title" maxlength="120" placeholder="The night the generator quit at the FOB"></label>
+          <label for="name">Name to show<input type="text" id="name" maxlength="80" placeholder="SSgt Dana R."></label>
+          <label for="branch">Branch
+            <select id="branch">
+              <option value="">Choose one</option>
+              <option>Army</option><option>Marine Corps</option><option>Navy</option><option>Air Force</option>
+              <option>Space Force</option><option>Coast Guard</option><option>Army National Guard</option><option>Air National Guard</option><option>Reserve</option>
+            </select>
+          </label>
+          <label for="era">Era or conflict
+            <select id="era">
+              <option value="">Choose one</option>
+              <option>WWII</option><option>Korea</option><option>Vietnam</option><option>Cold War</option>
+              <option>Gulf War</option><option>OEF / Afghanistan</option><option>OIF / Iraq</option><option>Peacetime / Other</option>
+            </select>
+          </label>
+          <label for="years">Years served<input type="text" id="years" maxlength="30" placeholder="2004–2012"></label>
+          <label class="full" for="summary">One-line summary <small>(optional)</small><textarea id="summary" maxlength="400" placeholder="What the story is about, in a sentence."></textarea></label>
+          <label class="full" for="email">Email <small>(optional, never shown, only used if you want your story changed or taken down)</small><input type="email" id="email" maxlength="200" autocomplete="email"></label>
+        </div>
+        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree this recording may be shown on this site after review. I can ask for it to be taken down at any time.</span></label>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>3</b><span>Send it in</span></div>
+        <div class="btns"><button type="submit" class="primary" id="submitBtn">Submit story</button></div>
+        <progress id="progress" max="100" value="0" hidden></progress>
+        <div class="msg" id="formMsg" role="status" hidden></div>
+      </div>
+    </form>
+  </section>
+
+  <section aria-labelledby="wall-h">
+    <h2 id="wall-h">The wall</h2>
+    <div class="wall" id="wall">
+      <div class="empty"><strong>Loading stories…</strong></div>
+    </div>
+  </section>
+
+  <footer><span>Stories are shared with the storyteller's permission.</span><a href="admin.html">Reviewer sign-in</a></footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
