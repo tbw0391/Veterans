@@ -1,5 +1,5 @@
 (function () {
-  const { sb, C, el, BRANCHES, ERAS, signedUrls, veteranCard, emptyState, VETERAN_COLS, sortVideos } = window.Stories;
+  const { sb, C, el, BRANCHES, ERAS, paintBranch, signedUrls, veteranCard, emptyState, VETERAN_COLS, sortVideos } = window.Stories;
   const $ = id => document.getElementById(id);
   const mb = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : (b / 1048576).toFixed(1) + " MB";
   const LIMIT = C.maxMinutes + " minutes";
@@ -286,11 +286,33 @@
     }
   });
 
-  // ---- The wall: approved profiles, newest first ----
+  // ---- The wall: approved profiles, newest first, with a button per branch ----
+  let wallBranch = null;
+  async function loadTabs() {
+    const { data } = await sb.from("veterans").select("branch").eq("status", "approved");
+    const n = {};
+    (data || []).forEach(v => n[v.branch] = (n[v.branch] || 0) + 1);
+    const tab = (label, b, count) => {
+      const t = el("button", null, `${label} (${count})`);
+      t.type = "button";
+      t.disabled = !count && b !== null;
+      t.setAttribute("aria-pressed", wallBranch === b);
+      if (b) paintBranch(t, b);
+      t.onclick = () => {
+        wallBranch = b;
+        $("wallTabs").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === t));
+        loadWall();
+      };
+      return t;
+    };
+    $("wallTabs").replaceChildren(tab("All", null, (data || []).length),
+      ...Object.keys(BRANCHES).map(b => tab(b, b, n[b] || 0)));
+  }
   async function loadWall() {
     const wall = $("wall");
-    const { data, error } = await sb.from("veterans").select(VETERAN_COLS)
-      .eq("status", "approved").order("approved_at", { ascending: false, nullsFirst: false }).limit(60);
+    let q = sb.from("veterans").select(VETERAN_COLS).eq("status", "approved");
+    if (wallBranch) q = q.eq("branch", wallBranch);
+    const { data, error } = await q.order("approved_at", { ascending: false, nullsFirst: false }).limit(60);
     wall.replaceChildren();
     if (error) { wall.append(emptyState("Couldn't load stories", "Refresh the page to try again.")); return; }
     if (!data.length) { wall.append(emptyState("No stories posted yet", "Record the first one above. It shows here once it's been reviewed.")); return; }
@@ -298,5 +320,6 @@
     const urls = await signedUrls(data.flatMap(v => [v.photo_path, (v.videos[0] || {}).video_path]));
     data.forEach(v => wall.append(veteranCard(v, urls).card));
   }
+  loadTabs();
   loadWall();
 })();
