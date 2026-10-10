@@ -7,5 +7,7 @@ window.STORIES_CONFIG = {
   // Longest story we take, and the biggest file. 30 minutes of 4K phone
   // video is about 5 GB. Raise both together (and the bucket limit in Supabase).
   maxMinutes: 30,
-  maxBytes: 8 * 1024 * 1024 * 1024
+  maxBytes: 8 * 1024 * 1024 * 1024,
+  // Stripe Payment Link for the Donate button. Leave empty to hide the button.
+  donateUrl: ""
 };

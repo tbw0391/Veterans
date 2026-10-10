@@ -322,4 +322,6 @@
   }
   loadTabs();
   loadWall();
+
+  if (C.donateUrl) { $("donateBtn").href = C.donateUrl; $("donate").hidden = false; }
 })();
