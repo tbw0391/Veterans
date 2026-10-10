@@ -19,7 +19,7 @@
   </header>
 
   <section id="signin" hidden>
-    <form class="panel" id="phoneForm" novalidate>
+    <form class="panel" id="phoneForm" novalidate hidden>
       <label for="loginPhone">Reviewer phone number<input type="tel" id="loginPhone" autocomplete="tel" inputmode="tel" placeholder="(555) 123-4567" required></label>
       <div class="btns"><button type="submit" class="primary" id="phoneBtn">Text me a code</button></div>
       <div class="msg" id="phoneMsg" role="status" hidden></div>
@@ -30,7 +30,7 @@
       <div class="btns"><button type="submit" class="primary" id="codeBtn">Sign in</button><button type="button" id="codeBack">Use a different number</button></div>
       <div class="msg" id="codeMsg" role="status" hidden></div>
     </form>
-    <form class="panel" id="loginForm" novalidate hidden>
+    <form class="panel" id="loginForm" novalidate>
       <label for="loginEmail">Reviewer email<input type="email" id="loginEmail" autocomplete="email" required></label>
       <div class="btns"><button type="submit" class="primary" id="loginBtn">Email me a sign-in link</button><button type="button" id="usePhone">Use my phone instead</button></div>
       <div class="msg" id="loginMsg" role="status" hidden></div>
