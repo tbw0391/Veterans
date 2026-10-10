@@ -9,5 +9,5 @@ window.STORIES_CONFIG = {
   maxMinutes: 30,
   maxBytes: 8 * 1024 * 1024 * 1024,
   // Stripe Payment Link for the Donate button. Leave empty to hide the button.
-  donateUrl: ""
+  donateUrl: "https://buy.stripe.com/14AaEZ7SW82jgTDb80ew801"
 };
