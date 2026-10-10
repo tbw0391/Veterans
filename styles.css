@@ -90,6 +90,7 @@ progress{width:100%;height:10px;accent-color:var(--olive)}
 .donate{margin-bottom:24px}
 .donate h2{margin-top:0}
 footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+.madeby{flex-basis:100%;text-align:center;font-weight:600;color:var(--olive);padding-top:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* Branch color: set per card/profile as --branch; olive when unknown */
