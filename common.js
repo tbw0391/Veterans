@@ -127,5 +127,9 @@
     return v;
   }
 
+  // Donate section, on any page that has one, once a link is set in config.js.
+  const donate = document.getElementById("donate");
+  if (donate && C.donateUrl) { document.getElementById("donateBtn").href = C.donateUrl; donate.hidden = false; }
+
   window.Stories = { sb, C, el, BRANCHES, ERAS, paintBranch, ribbons, serviceLine, signedUrls, videoEl, veteranCard, emptyState, VETERAN_COLS, sortVideos };
 })();

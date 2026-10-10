@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Stories of Service</title>
+<title>Watch Stories</title>
 <meta name="description" content="Veterans record and share their stories of service from a phone.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,23 +13,16 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="tag">Oral history project</div>
-    <h1>Stories of Service</h1>
-    <p>For Veterans, their families and the world to hear our stories of service.</p>
+    <a class="tag" href="./">Stories of Service</a>
   </header>
 
-  <nav class="choose" aria-label="Choose what to do">
-    <a class="choice-card tell" href="tell">
-      <span class="choice-k">For Veterans</span>
-      <strong>Tell my story</strong>
-      <span>Introduce yourself on video, record your stories one at a time, and add a short bio. Everything is reviewed before it goes up.</span>
-    </a>
-    <a class="choice-card watch" href="stories">
-      <span class="choice-k">For everyone</span>
-      <strong>Watch stories</strong>
-      <span id="storyCount">Hear from Veterans of every branch and era.</span>
-    </a>
-  </nav>
+  <section aria-labelledby="wall-h">
+    <h2 id="wall-h">Watch stories</h2>
+    <div class="tabs wall-tabs" id="wallTabs"></div>
+    <div class="wall" id="wall">
+      <div class="empty"><strong>Loading stories…</strong></div>
+    </div>
+  </section>
 
   <section class="panel donate" id="donate" aria-labelledby="donate-h" hidden>
     <h2 id="donate-h">Help keep these stories going</h2>
@@ -42,6 +35,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
-<script src="home.js"></script>
+<script src="wall.js"></script>
 </body>
 </html>

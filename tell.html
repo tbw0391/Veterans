@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tell Your Story</title>
+<meta name="description" content="Veterans record and share their stories of service from a phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="tag" href="./">Stories of Service</a>
+  </header>
+
+  <section aria-labelledby="rec-h">
+    <h2 id="rec-h">Tell your story</h2>
+    <form class="panel" id="form" novalidate>
+
+      <div class="step">
+        <div class="step-h"><b>1</b><span>About you</span></div>
+        <fieldset>
+          <legend>Which branch did you serve in?</legend>
+          <div class="choices branches" id="branchChoices"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Active duty, Guard or Reserve?</legend>
+          <div class="choices segmented" id="componentChoices"></div>
+        </fieldset>
+        <fieldset>
+          <legend>When did you serve? <small>(pick all that apply)</small></legend>
+          <div class="choices eras" id="eraChoices"></div>
+        </fieldset>
+        <div class="fields">
+          <label for="name">Name to show<input type="text" id="name" maxlength="80" placeholder="SSgt Dana R." autocomplete="name"></label>
+          <label for="years">Years served<input type="text" id="years" maxlength="30" placeholder="2004–2012"></label>
+          <label class="full" for="email">Email <small>(optional, never shown, only used if you want something changed or taken down)</small><input type="email" id="email" maxlength="200" autocomplete="email"></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>2</b><span>Introduce yourself</span></div>
+        <p class="hint">A short video, a minute or two: your name, your branch, when you served and what you did.</p>
+        <div id="introPicker"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>3</b><span>Your stories</span></div>
+        <p class="hint">Record each story as its own video, up to <span class="maxmin"></span> each. One for joining up, one for a deployment, one for coming home, whatever you want to share.</p>
+        <div id="storyList" class="story-list"></div>
+        <div class="btns"><button type="button" id="addStory">Add another story</button></div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>4</b><span>Your bio <small>(all optional)</small></span></div>
+        <p class="hint">This goes on your profile page next to your videos. Rather talk than type? Tap the microphone on your phone's keyboard and speak.</p>
+        <div class="photo-pick">
+          <img id="photoPreview" alt="" hidden>
+          <div class="btns">
+            <label class="filebtn" id="photoBtn">Add a photo<input type="file" id="photoInput" accept="image/*"></label>
+            <button type="button" class="small" id="photoClear" hidden>Remove photo</button>
+          </div>
+          <div class="fileinfo" id="photoInfo">A portrait, or a photo from your service.</div>
+        </div>
+        <div class="fields">
+          <label for="rank">Rank<input type="text" id="rank" maxlength="60" placeholder="Staff Sergeant (E-6)"></label>
+          <label for="job">Job / MOS / rating<input type="text" id="job" maxlength="120" placeholder="0311 Rifleman"></label>
+          <label class="full" for="unit">Units<input type="text" id="unit" maxlength="200" placeholder="2nd Bn, 5th Marines"></label>
+          <label class="full" for="stations">Duty stations<textarea id="stations" maxlength="500" placeholder="Camp Pendleton, Okinawa"></textarea></label>
+          <label class="full" for="deployments">Deployments<textarea id="deployments" maxlength="500" placeholder="Iraq 2004, Afghanistan 2010"></textarea></label>
+          <label class="full" for="awards">Awards and decorations<textarea id="awards" maxlength="500" placeholder="Bronze Star, Purple Heart"></textarea></label>
+          <label class="full" for="hometown">Hometown<input type="text" id="hometown" maxlength="120" placeholder="Columbus, Ohio"></label>
+          <label class="full" for="after">Life after service<textarea id="after" maxlength="1000" placeholder="Work, family, what you're up to now."></textarea></label>
+          <label class="full" for="bio">About me<textarea id="bio" class="tall" maxlength="4000" placeholder="Anything else you want people to know, in your own words."></textarea></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><b>5</b><span>Send it in</span></div>
+        <label class="consent" for="consent"><input type="checkbox" id="consent"><span>I agree my videos and bio may be shown on this site after review. I can ask for them to be taken down at any time.</span></label>
+        <p class="hint promise">Your information will never be sold to anyone, in any way. This site is for Veterans, their families and the world to hear our stories of service.</p>
+        <div class="btns"><button type="submit" class="primary" id="submitBtn">Send my profile</button></div>
+        <div class="fileinfo" id="progressLabel" hidden></div>
+        <progress id="progress" max="100" value="0" hidden></progress>
+        <div class="msg" id="formMsg" role="status" hidden></div>
+      </div>
+    </form>
+  </section>
+
+  <footer><span>Stories are shared with the storyteller's permission.</span><a href="admin.html">Reviewer sign-in</a><span class="madeby">Your information will never be sold to anyone, in any way.<br>Created by a Veteran for our Veterans.</span></footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
