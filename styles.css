@@ -53,6 +53,7 @@ textarea{min-height:70px;resize:vertical}
 textarea.tall{min-height:160px}
 .step-h small{font-weight:400;color:var(--muted)}
 .hint{margin:0;color:var(--muted);font-size:.92rem}
+.promise{border-left:3px solid var(--brass);padding-left:12px}
 .photo-pick{display:grid;gap:8px;justify-items:start}
 .photo-pick img{width:140px;height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
 .consent{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:.92rem}
